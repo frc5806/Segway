@@ -101,7 +101,7 @@ void imuSetup() {
     pinMode(LED_PIN, OUTPUT);
 }
 
-int getYaw() {
+int getPitch() {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
@@ -152,10 +152,10 @@ void setup()  {
   Serial.begin(115200);
   while (!Serial); // wait for Leonardo enumeration, others continue immediately
 
-  imuTestSetup();
+  imuSetup();
 } 
 
 void loop()  { 
-  imuTestLoop();
+  int pitch = getPitch();
 }
 
