@@ -165,15 +165,31 @@ bool isSafe() {
 *********PID*************
 *************************/
 
-#define CENTER 0.0
-#define MAX_OFFSET 90.0
+#define MAX_OFFSET 20.0
 #define PROPORTIONAL_TERM 1.0
 
+int CENTER;
+
+void calibrateIMU() {
+  for(int a = 0; a < 1200; a++) {
+    getPitch();
+    delay(10);
+  }
+  CENTER = getPitch();
+}
+
 int getMotorValue() {
-  float pitch = getPitch(); 
+  float pitch = getPitch();
+  
+  Serial.print(pitch);
+  Serial.print(" ");
+  
   float offset = CENTER - pitch;
 
-  return PROPORTIONAL_TERM*offset/MAX_OFFSET; 
+  Serial.print(offset);
+  Serial.print(" ");
+
+  return PROPORTIONAL_TERM*offset/(float)MAX_OFFSET; 
 }
 
 /************************
@@ -188,11 +204,11 @@ void setup()  {
   setupButton();
   attachMotors();
   imuSetup();
-
+  calibrateIMU();
 } 
 
-void loop()  { 
-  //int motorValue = getMotorValue();
+void loop()  {
+  int motorValue = getMotorValue();
   //int* coords = getJoystickCoords();
 
   /*Serial.print(coords[0]);
@@ -200,12 +216,12 @@ void loop()  {
   Serial.print(coords[1]);
   Serial.print(", ");
   */
-  //Serial.print(getPitch());
+  //Serial.print(coords[0]);
   //Serial.print(", ");
-  //Serial.print(motorValue);
-  //Serial.print("\n");
+  Serial.print(motorValue);
+  Serial.print("\n");
 
-  setMotors(-0.5, 0.5);
-  delay(10);
+  setMotors(motorValue, motorValue);
+  delay(5);
  }
 
