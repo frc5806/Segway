@@ -103,7 +103,7 @@ void imuSetup() {
 
 int getPitch() {
     // if programming failed, don't try to do anything
-    if (!dmpReady) return;
+    if (!dmpReady) return -999;
 
     do {
       while (!mpuInterrupt && fifoCount < packetSize) {};
@@ -128,18 +128,12 @@ int getPitch() {
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    Serial.print("ypr\t");
-    Serial.print(ypr[0] * 180/M_PI);
-    Serial.print("\t");
-    Serial.print(ypr[1] * 180/M_PI);
-    Serial.print("\t");
-    Serial.println(ypr[2] * 180/M_PI);
-    
+
     // blink LED to indicate activity
     blinkState = !blinkState;
     digitalWrite(LED_PIN, blinkState);
     
-    return ypr[0];
+    return ypr[1] * 180/M_PI;
 }
 
 /************************
@@ -156,6 +150,6 @@ void setup()  {
 } 
 
 void loop()  { 
-  int pitch = getPitch();
+  Serial.println(getPitch());
 }
 
