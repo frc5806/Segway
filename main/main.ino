@@ -1,15 +1,36 @@
+#include <Servo.h>
+
 /************************
 *********JOYSTICK********
 *************************/
 #define JOYSTICK_X_PIN A0
 #define JOYSTICK_Y_PIN A1
 
-int getJoystickX() {
-  return analogRead(JOYSTICK_X_PIN);
+int* getJoystickCoords() {
+  int joystickCoords[2];
+  joystickCoords[0] = analogRead(JOYSTICK_X_PIN);
+  joystickCoords[1] = analogRead(JOYSTICK_Y_PIN);
+
+  return joystickCoords;
 }
 
-int getJoystickY() {
-  return analogRead(JOYSTICK_Y_PIN);
+/************************
+*********MOTORS**********
+*************************/
+#define RIGHT_MOTOR_PIN A0
+#define LEFT_MOTOR_PIN A1
+
+Servo rightMotor;
+Servo leftMotor;
+
+void attachMotors() {
+  rightMotor.attach(RIGHT_MOTOR_PIN);
+  leftMotor.attach(LEFT_MOTOR_PIN);
+}
+
+void setMotors(float r, float l) {
+  rightMotor.write(r); 
+  leftMotor.write(l); 
 }
 
 /************************
@@ -101,7 +122,7 @@ void imuSetup() {
     pinMode(LED_PIN, OUTPUT);
 }
 
-int getPitch() {
+float getPitch() {
     // if programming failed, don't try to do anything
     if (!dmpReady) return -999;
 
@@ -136,20 +157,55 @@ int getPitch() {
     return ypr[1] * 180/M_PI;
 }
 
+/**********************
+*****SAFETY BUTTON*****
+***********************/
+
+#define SAFETY_BUTTON_PIN 8
+
+bool isSafe() {
+  return digitalRead(SAFETY_BUTTON_PIN) == HIGH;
+}
+
+/************************
+*********PID*************
+*************************/
+
+#define CENTER 0.0
+#define MAX_OFFSET 90.0
+#define PROPORTIONAL_TERM 1.0
+
+int getMotorValue() {
+  if(isSafe() == false) return 0;
+
+  float pitch = getPitch(); 
+  float offset = CENTER - pitch;
+
+  return PROPORTIONAL_TERM*offset/MAX_OFFSET; 
+}
+
 /************************
 *********MAIN************
 *************************/
 
 void setup()  {
-  // initialize serial communication
-  // (115200 chosen because it is required for Teapot Demo output, but it's really up to you depending on your project)
+  // Setup serial
   Serial.begin(115200);
-  while (!Serial); // wait for Leonardo enumeration, others continue immediately
+  while (!Serial);
 
+  attachMotors();
   imuSetup();
 } 
 
 void loop()  { 
-  Serial.println(getPitch());
+  int motorValue = getMotorValue();
+
+
+  Serial.print(getPitch());
+  Serial.print(", ");
+  Serial.print(motorValue);
+  Serial.print("\n");
+
+  setMotors(motorValue, motorValue);
 }
 
