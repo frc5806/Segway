@@ -3,7 +3,7 @@
 /************************
 *********JOYSTICK********
 *************************/
-#define JOYSTICK_X_PIN A0
+#define JOYSTICK_X_PIN A0 
 #define JOYSTICK_Y_PIN A1
 
 int* getJoystickCoords() {
@@ -17,8 +17,8 @@ int* getJoystickCoords() {
 /************************
 *********MOTORS**********
 *************************/
-#define RIGHT_MOTOR_PIN A0
-#define LEFT_MOTOR_PIN A1
+#define RIGHT_MOTOR_PIN 9  
+#define LEFT_MOTOR_PIN 11
 
 Servo rightMotor;
 Servo leftMotor;
@@ -29,8 +29,8 @@ void attachMotors() {
 }
 
 void setMotors(float r, float l) {
-  rightMotor.write(r); 
-  leftMotor.write(l); 
+  rightMotor.write(-r*90+90); 
+  leftMotor.write(l*90+90); 
 }
 
 /************************
@@ -46,9 +46,6 @@ void setMotors(float r, float l) {
 #endif
 
 MPU6050 mpu;
-
-#define LED_PIN 13
-bool blinkState = false;
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -117,9 +114,6 @@ void imuSetup() {
         Serial.print(devStatus);
         Serial.println(F(")"));
     }
-
-    // configure LED for output
-    pinMode(LED_PIN, OUTPUT);
 }
 
 float getPitch() {
@@ -150,10 +144,6 @@ float getPitch() {
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
-    // blink LED to indicate activity
-    blinkState = !blinkState;
-    digitalWrite(LED_PIN, blinkState);
-    
     return ypr[1] * 180/M_PI;
 }
 
@@ -161,7 +151,11 @@ float getPitch() {
 *****SAFETY BUTTON*****
 ***********************/
 
-#define SAFETY_BUTTON_PIN 8
+#define SAFETY_BUTTON_PIN 7
+
+void setupButton() {
+  pinMode(SAFETY_BUTTON_PIN, INPUT);
+}
 
 bool isSafe() {
   return digitalRead(SAFETY_BUTTON_PIN) == HIGH;
@@ -176,8 +170,6 @@ bool isSafe() {
 #define PROPORTIONAL_TERM 1.0
 
 int getMotorValue() {
-  if(isSafe() == false) return 0;
-
   float pitch = getPitch(); 
   float offset = CENTER - pitch;
 
@@ -193,19 +185,27 @@ void setup()  {
   Serial.begin(115200);
   while (!Serial);
 
+  setupButton();
   attachMotors();
   imuSetup();
+
 } 
 
 void loop()  { 
-  int motorValue = getMotorValue();
+  //int motorValue = getMotorValue();
+  //int* coords = getJoystickCoords();
 
-
-  Serial.print(getPitch());
+  /*Serial.print(coords[0]);
+  Serial.print(" ");
+  Serial.print(coords[1]);
   Serial.print(", ");
-  Serial.print(motorValue);
-  Serial.print("\n");
+  */
+  //Serial.print(getPitch());
+  //Serial.print(", ");
+  //Serial.print(motorValue);
+  //Serial.print("\n");
 
-  setMotors(motorValue, motorValue);
-}
+  setMotors(-0.5, 0.5);
+  delay(10);
+ }
 
